@@ -1,0 +1,11 @@
+name = Mysearch Module
+description = Searchs all nodes in a database for occurrences of the given word in address line.
+package = Searching
+core = 7.x
+
+files[] = mysearch.module
+files[] = mysearch.install
+
+dependencies[] = node
+
+version = "7.x-1.0"

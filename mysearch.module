@@ -1,0 +1,107 @@
+<?php
+
+ /**
+ * Implements hook_help().
+ */
+function mysearch_help($path, $arg) {
+  switch ($path) {
+    case 'admin/config/administration/mysearch':
+      return '<p>' . t('Mysearch Module config page') . '</p>';
+
+    case 'admin/help#mysearch':
+      $output = '';
+      $output .= t('<p><b>The Mysearch Module Help Page</b></p>');
+      $output .= t('<p style="width:500px;text-align:justify;">Mysearch Module is simple search module that let user: 
+	  <ul>
+	  <li>Searching	all	nodes in a database for occurrences of the word by the direct url, such as <a>http://domain.com/mysearch/<b>word-to-search</b></a>.</li>
+	  <li>The results will be printed to a page	in an unordered	list with the title-links of the node.</li>
+	  <li>After install Mysearch module will create 10 node of Page content type. All of them contain "example" word. So you can type in you address line follow: <a>http://domain.com/mysearch/example</a> to see the module works.</li>
+	  </ul></p>');
+      return $output;
+  }
+}
+
+/**
+ * Implementation of hook_permission().
+ */
+function mysearch_permission() {
+  return array(
+    'access mysearch' => array(
+        'title' => t('Access My Search'),
+        'description' => t('Allows a user to access search results'),
+      )
+    );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function mysearch_menu() {
+  $items['mysearch/%'] = array(
+    'title' => t('Search'),
+    'page callback' => '_mysearch_searchpage',
+    'access arguments' => array('access mysearch'),
+    'type' => MENU_SUGGESTED_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Menu callback provides a simple list of node's titles matching the
+ * search term Example: hitting the URL:
+ *   http://domain.com/mysearch/example
+ * will return a list of links to nodes which have the word
+ * example in them.
+ */
+function _mysearch_searchpage() {
+  $searchterm = arg(1);
+
+  $query = "
+     SELECT revision_id
+     FROM field_data_body
+     WHERE body_value LIKE '%$searchterm%'
+     ";
+  $search_results = db_query($query);
+
+  $result = '<h2>Search for word <b>' . $searchterm . '</b></h2>';
+  
+    $result .= t('<p>Here you can see the searh result by the word <b>' . $searchterm . '</b></p>');
+    $result .= t('<p>You can start new word searching by setting address line to <a>http://your.domain.com/mysearch/WORD_TO_SEARCH</a></p>');
+    $result .= '<ul>';
+    foreach($search_results as $record) {
+       $node = node_load($record->revision_id);
+       $result .= '<li><a href="/node/' . $node->nid . '" title="' . $node->title . '">' . $node->title . '</li>';
+     }
+    $result .= '</ul>';	
+
+  return $result;
+}
+
+/**
+ * Implements Hook_enabled().
+ * Sets all users permissions to TRUE after module install.
+ */
+function mysearch_enable() {
+  $permissions = array(
+    'access mysearch'  => TRUE,
+  );
+  user_role_change_permissions(DRUPAL_ANONYMOUS_RID, $permissions);
+  user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, $permissions);
+  drupal_set_message($message = t('The <b>Mysearch</b> module was enabled.'), $type = 'status');
+  drupal_set_message($message = t('The <b>Mysearch</b> all users roles permissions was enabled.'), $type = 'status');
+}
+
+/**
+ * Implements Hook_disabled().
+ */
+function mysearch_disable() {
+  $permissions = array('access mysearch');
+  $roles = user_roles();
+  foreach ($roles as $rid => $name) {
+    user_role_revoke_permissions($rid, $permissions);
+  }
+  drupal_set_message($message = t('The <b>Mysearch</b> permissions was disabled.'), $type = 'status');
+  drupal_set_message($message = t('The <b>Mysearch</b> module was disabled.'), $type = 'status');
+  drupal_set_message($message = t('<b><h2>Warning!</h2></b>'), $type = 'status');
+  drupal_set_message($message = t('You must uninstall it on <a href="/admin/modules/uninstall">Modules uninstall page</a>, because it may has a set of data in database.'), $type = 'status');
+}

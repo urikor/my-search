@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * Implements hook_install().
+ * Creates 10 nodes of Page content type containing "example" word.
+ * It's intend to show what can module do.
+*/ 
+
+function mysearch_install() {
+
+  for ($i = 1; $i <= 10; $i++) {
+    _create_node('New mysearch node ' . $i);
+  } 
+  drupal_set_message($message = st('10 nodes containing "example" word created. It is just for demonstrate module work.'), $type = 'status');
+  drupal_set_message($message = st('<b>Mysearch</b> module successfully installed.'), $type = 'status');
+}
+
+/**
+ * Creating nodes function.
+ */
+function _create_node($title) {
+ 
+  $bodytext = '<h2>Lorem ipsum dolor</h2><p style="color: rgb(59, 59, 59);text-align:justify;">Sit amet, <a style="color: rgb(0, 113, 179);">consectetur adipisicing elit</a>, sed do eiusmod tem <b>example</b> por incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud <a style="color: rgb(0, 113, 179);">exercitation ullamco</a> laboris nisi ut aliquip ex ea commodo consequat. Maecenas id porttitor Ut enim ad minim veniam, quis nostr udfelis.</p>';
+  
+  $node = new stdClass();
+  $node->type = "page";
+  node_object_prepare($node);
+
+  $node->title    = $title;
+  $node->language = LANGUAGE_NONE;
+
+  $node->uid = 1;
+
+  $node->body[$node->language][0]['value']   = $bodytext;
+  $node->body[$node->language][0]['summary'] = text_summary($bodytext);
+  $node->body[$node->language][0]['format']  = 'full_html';
+
+  $path = $title;
+  $node->path = array('alias' => $path);
+
+  if ($node = node_submit($node)) { 
+      node_save($node);
+  }
+} 
+
+/**
+ * Implements hook_uninstall().
+ */
+function mysearch_uninstall() {
+
+  drupal_set_message($message = t('<b>Mysearch</b> module successfully uninstalled.'), $type = 'status');
+}
